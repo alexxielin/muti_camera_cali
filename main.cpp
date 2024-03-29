@@ -1,13 +1,12 @@
 //
 // Created by haoyuefan on 2021/9/22.
 //
-
 #include <memory>
 #include <chrono>
 #include "utils.h"
 #include "super_glue.h"
 #include "super_point.h"
-
+#include "calibration.h"
 int main(int argc, char **argv)
 {
     std::string project_path = "/home/xielin/cali/SuperPoint-SuperGlue-TensorRT-main/";
@@ -66,22 +65,19 @@ int main(int argc, char **argv)
         double y = feature_points1(2, i);
         keypoints1.emplace_back(x, y, 8, -1, score);
     }
-    /* for (size_t i = 0; i < superglue_matches.size(); i++)
-    {
-        cv::DMatch match = superglue_matches[i];
-        std::cout << "Query idx: " << match.queryIdx << ", Train idx: " << match.trainIdx
-                  << ", Distance: " << match.distance << std::endl;
-    } */
     cv::drawMatches(image0, keypoints0, image1, keypoints1, superglue_matches, match_image);
     // visualize
     cv::imshow("match_image", match_image);
     cv::waitKey(-1);
 
+    ImageCalibration calier;
+    calier.readParams();
+    std::cout << calier.K0_;
     // 去除外点
     // 像素点去畸变
-    std::vector<cv::KeyPoint> un_point0, un_point1;
-    cv::undistortPoints(keypoints0, un_point0, K0_, D0_);
-    cv::undistortPoints(keypoints1, un_point1, K1_, D1_);
+    std::vector<cv::KeyPoint>
+        un_point0,
+        un_point1;
 
     return 0;
 }
