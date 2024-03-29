@@ -1,0 +1,27 @@
+{
+   "version": "0.2.0",
+   "configurations": [
+      {
+         //用gdb编译器来启动可执行文件
+         "name": "Debugger",
+         //设置为debug模式
+         "type": "cppdbg",
+         "request": "launch",
+         //设置启动那个可执行文件
+         "program": "${workspaceFolder}/build/superpointglue_test",
+         "args": [],
+         "stopAtEntry": false,
+         "cwd": "${workspaceFolder}",
+         "environment": [],
+         "externalConsole": true,
+         "MIMode": "gdb",
+         "setupCommands": [
+            {
+               "description": "Enable pretty-printing for gdb",
+               "text": "-enable-pretty-printing",
+               "ignoreFailures": true
+            }
+         ]
+      }
+   ]
+}
