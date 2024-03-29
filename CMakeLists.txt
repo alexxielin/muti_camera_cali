@@ -12,7 +12,7 @@ find_package(OpenCV 4.2 REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(CUDA REQUIRED)
 find_package(yaml-cpp REQUIRED)
-
+find_package(YAML-CPP REQUIRED)
 
 include_directories(
   ${PROJECT_SOURCE_DIR}
@@ -37,10 +37,6 @@ target_link_libraries(${PROJECT_NAME}_lib
   tensorrtbuffer
 )
 
-add_executable(${PROJECT_NAME}_image inference_image.cpp)
-add_executable(${PROJECT_NAME}_sequence inference_sequence.cpp)
-add_executable(${PROJECT_NAME}_test my_test_image.cpp)
+add_executable(${PROJECT_NAME}_cali main.cpp src/calibration.cpp)
 
-target_link_libraries(${PROJECT_NAME}_image ${PROJECT_NAME}_lib)
-target_link_libraries(${PROJECT_NAME}_sequence  ${PROJECT_NAME}_lib)
-target_link_libraries(${PROJECT_NAME}_test  ${PROJECT_NAME}_lib)
+target_link_libraries(${PROJECT_NAME}_cali  ${PROJECT_NAME}_lib)
