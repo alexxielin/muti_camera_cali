@@ -8,7 +8,7 @@
          "type": "cppdbg",
          "request": "launch",
          //设置启动那个可执行文件
-         "program": "${workspaceFolder}/build/superpointglue_test",
+         "program": "${workspaceFolder}/build/superpointglue_cali",
          "args": [],
          "stopAtEntry": false,
          "cwd": "${workspaceFolder}",

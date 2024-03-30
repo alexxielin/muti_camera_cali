@@ -63,6 +63,10 @@
         "cfenv": "cpp",
         "typeinfo": "cpp",
         "bit": "cpp",
-        "core": "cpp"
+        "core": "cpp",
+        "forward_list": "cpp",
+        "typeindex": "cpp",
+        "valarray": "cpp",
+        "variant": "cpp"
     }
 }

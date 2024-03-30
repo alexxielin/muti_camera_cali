@@ -10,7 +10,8 @@ ImageCalibration::ImageCalibration()
 void ImageCalibration::readParams()
 {
   // 从json文件中读取相机参数
-  std::ifstream file("../config/camera_intrinsics.json");
+  // std::ifstream file("/home/xielin/cali/SuperPoint-SuperGlue-TensorRT-main/config/camera_intrinsics.json");
+  std::ifstream file("./config/camera_intrinsics.json");
   nlohmann::json j;
   file >> j;
   // 从JSON对象中获取数据
@@ -62,73 +63,52 @@ void ImageCalibration::showImage(cv::Mat img, std::vector<cv::KeyPoint> point)
   cv::waitKey(0);
 }
 
-void ImageCalibration::calibrate()
+void ImageCalibration::calibrate(std::vector<cv::KeyPoint> &points0, std::vector<cv::KeyPoint> &points1, std::vector<cv::DMatch> &matchs)
 {
-  /* // Do calibration
-  std::cout << "Calibrating..." << std::endl;
-  // 提取sift特征点
-  std::vector<cv::KeyPoint> points0, points1;
-  cv::Mat descriptors1, descriptors2;
+  std::vector<cv::Point2f> un_point0, un_point1;
+  // //像素点去畸变
+  // 将 KeyPoint 转换为 Point2f
+  std::vector<cv::Point2f> points0_, points1_;
+  points0_.reserve(points0.size());
+  points1_.reserve(points1.size());
 
-  cv::Ptr<cv::FeatureDetector> detector = cv::ORB::create(800, 1.2f, 16);
-  cv::Ptr<cv::DescriptorExtractor> descriptor = cv::ORB::create();
-  cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
-
-  //-- 第一步:检测 Oriented FAST 角点位置
-  detector->detect(img0_, points0);
-  detector->detect(img1_, points1);
-  std::cout << "Number of keypoints (img0): " << points0.size() << '\n';
-  std::cout << "Number of keypoints (img0): " << points1.size() << '\n';
-  showImage(img0_, points0);
-  showImage(img1_, points1);
-  //-- 第二步:根据角点位置计算 BRIEF 描述子
-  descriptor->compute(img0_, points0, descriptors1);
-  descriptor->compute(img1_, points1, descriptors2);
-
-  //-- 第三步:对两幅图像中的BRIEF描述子进行匹配，使用 Hamming 距离
-  std::vector<cv::DMatch> match;
-  matcher->match(descriptors1, descriptors2, match);
-
-  //-- 第四步:匹配点对筛选
-  double min_dist = 10000, max_dist = 0;
-
-  // 找出所有匹配之间的最小距离和最大距离, 即是最相似的和最不相似的两组点之间的距离
-  for (int i = 0; i < descriptors1.rows; i++)
+  // 得到两个图像的特征点（像素坐标）
+  for (const auto &kp : points0)
   {
-    double dist = match[i].distance;
-    if (dist < min_dist)
-      min_dist = dist;
-    if (dist > max_dist)
-      max_dist = dist;
+    points0_.emplace_back(kp.pt);
   }
-  printf("-- Max dist : %f \n", max_dist);
-  printf("-- Min dist : %f \n", min_dist);
-
-  // 当描述子之间的距离大于两倍的最小距离时,即认为匹配有误.但有时候最小距离会非常小,设置一个经验值30作为下限.
-  for (int i = 0; i < descriptors1.rows; i++)
+  for (const auto &kp : points1)
   {
-    if (match[i].distance <= std::max(2 * min_dist, 30.0))
+    points1_.emplace_back(kp.pt);
+  }
+
+  // 得到两个图像匹配上的匹配特征点（像素坐标）
+  std::vector<cv::Point2f> match_points0_, match_points1_;
+  std::vector<std::pair<int, int>> Idx;
+  for (const auto &val : matchs)
+  {
+    int queryidx = val.queryIdx;
+    int trainidx = val.trainIdx;
+    match_points0_.emplace_back(points0_[queryidx]);
+    match_points1_.emplace_back(points1_[trainidx]);
+    Idx.emplace_back(queryidx, trainidx);
+  }
+
+  std::vector<uchar> inliers_mask(matchs.size());
+  F = cv::findFundamentalMat(match_points0_, match_points1_, inliers_mask, cv::FM_RANSAC);
+  E = K1_.t() * F * K0_;
+  int count_idx = -1;
+  for (auto &val : inliers_mask)
+  {
+    count_idx++;
+    if (val)
     {
-      match.push_back(match[i]);
+      std::pair<int, int> temp = Idx[count_idx];
+      ransac_matchs.emplace_back(temp.first, temp.second, 0);
     }
   }
 
-  cv::Mat img_matches, img_matches_resized;
-  cv::drawMatches(img0_, points0, img1_, points1, match, img_matches);
-
-  cv::Size size(2300, 1200); // 你想要的新的图像大小
-  cv::resize(img_matches, img_matches_resized, size);
-
-  // 显示匹配结果
-  cv::imshow("Matches", img_matches_resized);
-  cv::waitKey(0);
-
-  // std::vector<cv::KeyPoint> un_point0, un_point1;
-  // //像素点去畸变
-  // cv::undistortPoints(points0, un_point0, K0_, D0_);
-  // cv::undistortPoints(points1, un_point1, K1_, D1_);
-
-  std::vector<cv::Point2f> point2f0, point2f1;
+  /* std::vector<cv::Point2f> point2f0, point2f1;
   for (size_t i = 0; i < points0.size(); i++)
   {
     point2f0.push_back(points0[i].pt);

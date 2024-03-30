@@ -14,22 +14,23 @@ int main(int argc, char **argv)
     std::string model_dir = project_path + "weights/";
     std::string image0_path = project_path + "image/0.jpg";
     std::string image1_path = project_path + "image/1.jpg";
+    ImageCalibration calier;
+    calier.readParams();
 
-    cv::Mat image0 = cv::imread(image0_path, cv::IMREAD_GRAYSCALE);
-    cv::Mat image1 = cv::imread(image1_path, cv::IMREAD_GRAYSCALE);
-
-    if (image0.empty() || image1.empty())
-    {
-        std::cerr << "Input image is empty. Please check the image path." << std::endl;
-        return 0;
-    }
-
+    cv::Mat image0_ = cv::imread(image0_path, cv::IMREAD_GRAYSCALE);
+    cv::Mat image1_ = cv::imread(image1_path, cv::IMREAD_GRAYSCALE);
+    cv::Mat image0, image1;
+    // 对整个图像去畸变
+    cv::undistort(image0_, image0, calier.K0_, calier.D0_);
+    cv::undistort(image1_, image1, calier.K1_, calier.D1_);
     Configs configs(config_path, model_dir);
+    std::cout << image0.size() << "\n";
+    std::cout << image1.size() << "\n";
     int width = configs.superglue_config.image_width;
     int height = configs.superglue_config.image_height;
 
-    cv::resize(image0, image0, cv::Size(width, height));
-    cv::resize(image1, image1, cv::Size(width, height));
+    // cv::resize(image0, image0, cv::Size(width, height));
+    // cv::resize(image1, image1, cv::Size(width, height));
     // cv::imshow("image0", image0);
     // cv::waitKey(0);
     std::cout << "First image size: " << image0.cols << "x" << image0.rows << std::endl;
@@ -67,17 +68,30 @@ int main(int argc, char **argv)
     }
     cv::drawMatches(image0, keypoints0, image1, keypoints1, superglue_matches, match_image);
     // visualize
-    cv::imshow("match_image", match_image);
-    cv::waitKey(-1);
+    cv::imwrite("./result/match_image_without_ransac.jpg", match_image);
+    // cv::waitKey(-1);
 
-    ImageCalibration calier;
-    calier.readParams();
-    std::cout << calier.K0_;
     // 去除外点
     // 像素点去畸变
-    std::vector<cv::KeyPoint>
-        un_point0,
-        un_point1;
+    calier.calibrate(keypoints0, keypoints1, superglue_matches);
+    cv::Mat match_image_ransac;
+    cv::drawMatches(image0, keypoints0, image1, keypoints1, calier.ransac_matchs, match_image_ransac);
+    cv::imwrite("./result/match_image_with_ransac.jpg", match_image_ransac);
+    std::cout << calier.E << "\n";
+    // 进行奇异值分解（SVD）
+    cv::Mat R, t;
+    cv::SVD svd(calier.E, cv::SVD::FULL_UV);
 
+    // 恢复旋转矩阵
+    R = svd.u * cv::Mat::eye(3, 3, CV_64F) * svd.vt;
+
+    // 恢复平移向量
+    t = svd.u.col(2);
+
+    // 输出旋转矩阵和平移向量
+    std::cout << "Rotation Matrix:\n"
+              << R << std::endl;
+    std::cout << "Translation Vector:\n"
+              << t << std::endl;
     return 0;
 }

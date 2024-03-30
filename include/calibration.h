@@ -6,16 +6,18 @@
 #include "Eigen/Core"
 #include <string>
 #include <nlohmann/json.hpp>
+#include <unordered_map>
 class ImageCalibration
 {
 public:
   ImageCalibration();
   ~ImageCalibration() = default;
   void readParams();
+  void calibrate(std::vector<cv::KeyPoint> &points0, std::vector<cv::KeyPoint> &points1, std::vector<cv::DMatch> &matchs);
   void showImage(cv::Mat img, std::vector<cv::KeyPoint> point);
-  void calibrate();
-
   cv::Mat K0_, K1_;
   cv::Mat D0_, D1_;
+  std::vector<cv::DMatch> ransac_matchs;
+  cv::Mat F, E;
 };
 #endif

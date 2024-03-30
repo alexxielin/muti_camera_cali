@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 project(superpointglue)
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_BUILD_TYPE "release")
+set(CMAKE_BUILD_TYPE Debug)
 add_definitions(-w)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/3rdparty/tensorrtbuffer)
