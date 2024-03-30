@@ -21,8 +21,10 @@ int main(int argc, char **argv)
     cv::Mat image1_ = cv::imread(image1_path, cv::IMREAD_GRAYSCALE);
     cv::Mat image0, image1;
     // 对整个图像去畸变
-    cv::undistort(image0_, image0, calier.K0_, calier.D0_);
-    cv::undistort(image1_, image1, calier.K1_, calier.D1_);
+    // cv::undistort(image0_, image0, calier.K0_, calier.D0_);
+    // cv::undistort(image1_, image1, calier.K1_, calier.D1_);
+    calier.undistorted(image0_, image0, calier.K0_, calier.D0_);
+    calier.undistorted(image1_, image1, calier.K1_, calier.D1_);
     Configs configs(config_path, model_dir);
     std::cout << image0.size() << "\n";
     std::cout << image1.size() << "\n";
@@ -31,8 +33,8 @@ int main(int argc, char **argv)
 
     // cv::resize(image0, image0, cv::Size(width, height));
     // cv::resize(image1, image1, cv::Size(width, height));
-    // cv::imshow("image0", image0);
-    // cv::waitKey(0);
+    cv::imshow("image0", image0);
+    cv::waitKey(0);
     std::cout << "First image size: " << image0.cols << "x" << image0.rows << std::endl;
     std::cout << "Second image size: " << image1.cols << "x" << image1.rows << std::endl;
 

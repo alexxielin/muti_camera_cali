@@ -50,17 +50,18 @@ void ImageCalibration::readParams()
   D1_ = (cv::Mat_<double>(1, 8) << c1_k1, c1_k2, c1_p1, c1_p2, c1_k3, c1_k4, c1_k5, c1_k6);
 }
 
-void ImageCalibration::showImage(cv::Mat img, std::vector<cv::KeyPoint> point)
+void ImageCalibration::undistorted(cv::Mat input_img, cv::Mat &output_img, cv::Mat K, cv::Mat D)
 {
-  for (auto &p : point)
-  {
-    cv::circle(img, p.pt, 3, cv::Scalar(0, 255, 0), 1);
-  }
-  cv::Mat img_resized;
-  cv::Size size(2300, 1200); // 你想要的新的图像大小
-  cv::resize(img, img_resized, size);
-  cv::imshow("Image", img_resized);
-  cv::waitKey(0);
+  int rows = input_img.rows, cols = input_img.cols;
+  ;
+  const int ImgWidth = cols;
+  const int ImgHeight = rows;
+  cv::Mat map1, map2;
+  cv::Size imageSize(ImgWidth, ImgHeight);
+  const double alpha = 0;
+  cv::Mat NewCameraMatrix = getOptimalNewCameraMatrix(K, D, imageSize, alpha, imageSize, 0);
+  initUndistortRectifyMap(K, D, cv::Mat(), NewCameraMatrix, imageSize, CV_16SC2, map1, map2);
+  remap(input_img, output_img, map1, map2, cv::INTER_LINEAR);
 }
 
 void ImageCalibration::calibrate(std::vector<cv::KeyPoint> &points0, std::vector<cv::KeyPoint> &points1, std::vector<cv::DMatch> &matchs)

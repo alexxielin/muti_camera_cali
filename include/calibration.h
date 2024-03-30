@@ -14,7 +14,7 @@ public:
   ~ImageCalibration() = default;
   void readParams();
   void calibrate(std::vector<cv::KeyPoint> &points0, std::vector<cv::KeyPoint> &points1, std::vector<cv::DMatch> &matchs);
-  void showImage(cv::Mat img, std::vector<cv::KeyPoint> point);
+  void undistorted(cv::Mat input_img, cv::Mat &output_img, cv::Mat K, cv::Mat D);
   cv::Mat K0_, K1_;
   cv::Mat D0_, D1_;
   std::vector<cv::DMatch> ransac_matchs;
