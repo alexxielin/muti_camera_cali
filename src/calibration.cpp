@@ -108,37 +108,4 @@ void ImageCalibration::calibrate(std::vector<cv::KeyPoint> &points0, std::vector
       ransac_matchs.emplace_back(temp.first, temp.second, 0);
     }
   }
-
-  /* std::vector<cv::Point2f> point2f0, point2f1;
-  for (size_t i = 0; i < points0.size(); i++)
-  {
-    point2f0.push_back(points0[i].pt);
-    point2f1.push_back(points1[i].pt);
-  }
-
-  // 使用cv::findFundamentalMat函数进行RANSAC
-  std::vector<uchar> inliers_mask(match.size());
-  cv::findFundamentalMat(point2f0, point2f1, inliers_mask, cv::FM_RANSAC);
-
-  // 保存内点匹配
-  std::vector<cv::DMatch> inliers;
-  for (size_t i = 0; i < inliers_mask.size(); ++i)
-  {
-    if (inliers_mask[i])
-    {
-      inliers.push_back(match[i]);
-    }
-  }
-
-  // 创建一个用于显示匹配结果的图像
-  cv::Mat img_matches0, img_matches_resized0;
-  cv::drawMatches(img0_, points0, img1_, points1, inliers, img_matches0);
-
-  // 调整图像的大小
-  cv::Size size0(2560, 1300); // 你想要的新的图像大小
-  cv::resize(img_matches0, img_matches_resized0, size0);
-
-  // 显示调整大小后的匹配结果
-  cv::imshow("Matches", img_matches_resized0);
-  cv::waitKey(0); */
 }

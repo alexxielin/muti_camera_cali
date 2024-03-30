@@ -20,26 +20,24 @@ int main(int argc, char **argv)
     cv::Mat image0_ = cv::imread(image0_path, cv::IMREAD_GRAYSCALE);
     cv::Mat image1_ = cv::imread(image1_path, cv::IMREAD_GRAYSCALE);
     cv::Mat image0, image1;
-    // 对整个图像去畸变
+    // 对整个图像去畸变(这种去畸变方式会保留更多的像素点但是会丢掉边缘信息)
     // cv::undistort(image0_, image0, calier.K0_, calier.D0_);
     // cv::undistort(image1_, image1, calier.K1_, calier.D1_);
+
+    // 对整个图像去畸变(这种去畸变方式会少掉一部分的像素点但是会保留边缘信息)
     calier.undistorted(image0_, image0, calier.K0_, calier.D0_);
     calier.undistorted(image1_, image1, calier.K1_, calier.D1_);
+
     Configs configs(config_path, model_dir);
-    std::cout << image0.size() << "\n";
-    std::cout << image1.size() << "\n";
     int width = configs.superglue_config.image_width;
     int height = configs.superglue_config.image_height;
 
-    // cv::resize(image0, image0, cv::Size(width, height));
-    // cv::resize(image1, image1, cv::Size(width, height));
-    cv::imshow("image0", image0);
-    cv::waitKey(0);
-    std::cout << "First image size: " << image0.cols << "x" << image0.rows << std::endl;
-    std::cout << "Second image size: " << image1.cols << "x" << image1.rows << std::endl;
+    // cv::imshow("image0", image0);
+    // cv::waitKey(0);
 
     std::cout << "Building inference engine......" << std::endl;
     auto superpoint = std::make_shared<SuperPoint>(configs.superpoint_config);
+    // 现在superpoint的序列化引擎支持2000*2000的图像输入
     superpoint->build();
 
     auto superglue = std::make_shared<SuperGlue>(configs.superglue_config);
@@ -75,7 +73,9 @@ int main(int argc, char **argv)
 
     // 去除外点
     // 像素点去畸变
+    // 通过计算去畸变后的F矩阵来剔除外点
     calier.calibrate(keypoints0, keypoints1, superglue_matches);
+
     cv::Mat match_image_ransac;
     cv::drawMatches(image0, keypoints0, image1, keypoints1, calier.ransac_matchs, match_image_ransac);
     cv::imwrite("./result/match_image_with_ransac.jpg", match_image_ransac);
